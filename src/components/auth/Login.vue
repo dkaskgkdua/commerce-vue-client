@@ -42,22 +42,28 @@
             color="error"
             class="mr-4"
             @click="reset"
+            :disabled="invalidForm"
         >
           취소
         </v-btn>
 
       </v-form>
+      <p class="error" v-if="error">{{error}}</p>
     </v-col>
   </v-row>
 </template>
 
 <script>
+import {mapActions} from 'vuex'
+
 export default {
   name: "Login",
   data: () => ({
     valid: true,
     id: '',
     password: '',
+    error: '',
+    rPath: '',
     idRules: [
       v => !!v || 'Name is required',
     ],
@@ -65,13 +71,32 @@ export default {
       v => !!v || 'Password is required'
     ]
   }),
-
+  computed: {
+    invalidForm() {
+      return !this.id || !this.password
+    }
+  },
+  created() {
+    this.rPath = this.$route.query.rPath || '/'
+  },
   methods: {
+    ...mapActions([
+       'LOGIN'
+    ]),
     validate() {
       this.$refs.form.validate()
     },
     reset() {
       this.$refs.form.reset()
+    },
+    onSubmit() {
+      this.LOGIN({id:this.id, password: this.password})
+        .then(() => {
+          this.$router.push(this.rPath) // 이전 url로 라우팅
+        })
+        .catch(err => {
+          this.error = err.data.error
+        })
     }
   }
 }
